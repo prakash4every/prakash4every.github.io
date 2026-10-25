@@ -1766,6 +1766,7 @@
             const gallery = document.getElementById('image-gallery');
             if (!gallery) return;
 
+            // 1. Render immediate fallback Buddha images so gallery is NEVER blank
             const imageFiles = [
                 { name: "Buddha Statue Sarnath", download_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Buddha_statue_Sarnath.jpg/800px-Buddha_statue_Sarnath.jpg" },
                 { name: "Buddha Statue Kusinara", download_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Buddha_statue_at_Kusinara.jpg/800px-Buddha_statue_at_Kusinara.jpg" },
@@ -1779,11 +1780,28 @@
                 img.src = file.download_url;
                 img.alt = file.name;
                 img.loading = 'lazy';
-                img.onerror = function() {
-                    this.src = "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Buddha_statue_Sarnath.jpg/800px-Buddha_statue_Sarnath.jpg";
-                };
                 gallery.appendChild(img);
             });
+
+            // 2. Fetch fresh Facebook page gallery images in background
+            try {
+                const res = await fetch(`${API_URL}/gallery`, {
+                    headers: { 'x-app-auth': 'sahchar-app-client-secure-2026' }
+                });
+                const data = await res.json();
+                if (data.success && data.images && data.images.length > 0) {
+                    gallery.innerHTML = '';
+                    data.images.forEach(file => {
+                        const img = document.createElement('img');
+                        img.src = file.download_url;
+                        img.alt = file.name || "Sahchar Gallery";
+                        img.loading = 'lazy';
+                        gallery.appendChild(img);
+                    });
+                }
+            } catch (e) {
+                console.warn("Background gallery sync note:", e);
+            }
         }
 
         // ============================================================ //
