@@ -865,7 +865,7 @@
         .hero-insight {
             display: grid; width: 45%; aspect-ratio: 1; place-content: center;
             border: 2px solid rgba(246,213,143,.6); border-radius: 50%;
-            background: #ffffff url('./logo.png');
+            background: #ffffff url('https://prakash4every.github.io/sahchar/logo.png');
             background-size: cover;
             background-position: center;
             box-shadow: 0 0 55px rgba(246,213,143,.3);
@@ -1348,9 +1348,10 @@
     <section id="gallery">
         <h2>हमारी गैलरी</h2>
         <div class="gallery" id="image-gallery">
-            <p style="grid-column: 1 / -1; text-align:center; color:#777; padding:2rem; font-style:italic;">
-                गैलरी लोड हो रही है... 🌿
-            </p>
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Buddha_statue_Sarnath.jpg/800px-Buddha_statue_Sarnath.jpg" alt="Buddha Statue Sarnath" loading="lazy">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Buddha_statue_at_Kusinara.jpg/800px-Buddha_statue_at_Kusinara.jpg" alt="Buddha Statue Kusinara" loading="lazy">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Buddha_at_Kamakura.jpg/800px-Buddha_at_Kamakura.jpg" alt="Buddha Kamakura" loading="lazy">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Great_Buddha_at_Lingyin_Temple.jpg/800px-Great_Buddha_at_Lingyin_Temple.jpg" alt="Lingyin Temple Buddha" loading="lazy">
         </div>
     </section>
 
@@ -1885,18 +1886,18 @@
             return "💬 Chat";
         }
 
+        function getPersistentSessionId(){let s=localStorage.getItem('sahchar_session_id');if(!s){s='web_user_'+Date.now()+'_'+Math.random().toString(36).substring(2,7);localStorage.setItem('sahchar_session_id',s);}return s;}
+
         function generateImage(prompt) {
             showTyping(true);
             addMsg("🎨 इमेज जनरेट हो रही है...", "bot", "🎨 Image");
             fetch(`${API_URL}/generate`, {
-            headers: {
-                'Content-Type': 'application/json',
-                'x-app-auth': 'sahchar-app-client-secure-2026'
-            },
-            
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ prompt: prompt, sessionId: "web_user_" + Date.now() })
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-app-auth': 'sahchar-app-client-secure-2026'
+                },
+                body: JSON.stringify({ prompt: prompt, sessionId: getPersistentSessionId() })
             })
             .then(res => res.json())
             .then(data => {
@@ -1928,20 +1929,18 @@
             showTyping(true);
             addMsg("🎬 वीडियो जनरेट हो रहा है...", "bot", "🎬 Video");
             fetch(`${API_URL}/generate`, {
-            headers: {
-                'Content-Type': 'application/json',
-                'x-app-auth': 'sahchar-app-client-secure-2026'
-            },
-            
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ prompt: prompt, model: "video", sessionId: "web_user_" + Date.now() })
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-app-auth': 'sahchar-app-client-secure-2026'
+                },
+                body: JSON.stringify({ prompt: prompt, model: "video", sessionId: getPersistentSessionId() })
             })
             .then(res => res.json())
             .then(data => {
                 showTyping(false);
                 const msgs = messagesDiv.querySelectorAll('.sahcharMsg');
-                if (msgs.length > 0 && msgs[msgs.length-1].innerText.includes('जनरेट हो रहा है')) {
+                if (msgs.length > 0 && msgs[msgs.length-1].innerText.includes('जनरेट हो रही है')) {
                     msgs[msgs.length-1].remove();
                 }
                 const videoUrl = data.videoUrl;
@@ -1955,7 +1954,7 @@
             .catch(err => {
                 showTyping(false);
                 const msgs = messagesDiv.querySelectorAll('.sahcharMsg');
-                if (msgs.length > 0 && msgs[msgs.length-1].innerText.includes('जनरेट हो रहा है')) {
+                if (msgs.length > 0 && msgs[msgs.length-1].innerText.includes('जनरेट हो रही है')) {
                     msgs[msgs.length-1].remove();
                 }
                 addMsg("❌ वीडियो जनरेट करने में त्रुटि हुई।", "bot", "🎬 Video");
@@ -1963,48 +1962,23 @@
             });
         }
 
-        function sendSahcharMsg() {
-            const msg = inputField.value.trim();
-            if (!msg) return;
-            const feature = detectFeature(msg);
-            addMsg(msg, "user");
-            inputField.value = "";
-            showTyping(true);
-            let cleanMsg = msg.replace(/[\u{1F600}-\u{1F6FF}]/gu, '').trim();
-            if (!cleanMsg) { showTyping(false); addMsg("⚠️ कृपया टेक्स्ट लिखें।", "bot"); return; }
-
-            if (feature === "🎨 Image") {
-                let prompt = cleanMsg.replace(/तस्वीर\s*(बनाओ|दो|दिखाओ)/gi, '').replace(/इमेज\s*(बनाओ|दो|दिखाओ)/gi, '').replace(/image|picture|draw/gi, '').trim();
-                if (!prompt) prompt = cleanMsg;
-                generateImage(prompt);
-                return;
-            }
-
-            if (feature === "🎬 Video") {
-                let prompt = cleanMsg.replace(/वीडियो\s*(बनाओ|दो|दिखाओ)/gi, '').replace(/video/gi, '').trim();
-                if (!prompt) prompt = cleanMsg;
-                generateVideo(prompt);
-                return;
-            }
-
-            fetch(`${API_URL}/chat`, {
-                method: "POST",
-                headers: {
-                'x-app-auth': 'sahchar-app-client-secure-2026', "Content-Type": "application/json", "Accept": "application/json" },
-                body: JSON.stringify({ message: cleanMsg, sessionId: "web_user_" + Date.now() })
-            })
-            .then(res => res.json())
-            .then(data => {
-                showTyping(false);
-                const reply = data.reply || data.message || "क्षमा करें, उत्तर नहीं मिला। 🙏";
-                addMsg(reply, "bot", feature);
-                speakSahchar(reply);
-            })
-            .catch(err => {
-                showTyping(false);
-                addMsg("सर्वर से संपर्क नहीं हो पाया। 🙏", "bot");
-                console.error("Chat error:", err);
-            });
+        let isSendingMsg = false;
+        let currentAbortController = null;
+        function sendSahcharMsg(){
+          if(isSendingMsg) return;
+          const msg=inputField.value.trim(); if(!msg) return;
+          const now=Date.now(); const last=parseInt(localStorage.getItem('sahchar_last_send')||'0'); if(now-last<1200) return; localStorage.setItem('sahchar_last_send',now.toString());
+          isSendingMsg=true; const btn=document.getElementById('sendBtn'); if(btn){btn.disabled=true; btn.style.opacity='0.5';}
+          const feature=detectFeature(msg); addMsg(msg,'user'); inputField.value=''; showTyping(true);
+          let cleanMsg=msg; try{cleanMsg=msg.replace(/[\u{1F600}-\u{1F6FF}]/gu,'').trim();}catch(e){cleanMsg=msg;}
+          if(!cleanMsg){showTyping(false); isSendingMsg=false; if(btn){btn.disabled=false; btn.style.opacity='1';} return;}
+          if(cleanMsg.toLowerCase().includes('image')||cleanMsg.includes('तस्वीर')||cleanMsg.includes('इमेज')){isSendingMsg=false; if(btn){btn.disabled=false; btn.style.opacity='1';} generateImage(cleanMsg); return;}
+          if(cleanMsg.toLowerCase().includes('video')||cleanMsg.includes('वीडियो')){isSendingMsg=false; if(btn){btn.disabled=false; btn.style.opacity='1';} generateVideo(cleanMsg); return;}
+          if(currentAbortController){try{currentAbortController.abort();}catch(e){}} currentAbortController=new AbortController();
+          fetch(`${API_URL}/chat`,{method:'POST',headers:{'x-app-auth':'sahchar-app-client-secure-2026','Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({message:cleanMsg,sessionId:getPersistentSessionId(),deviceId:getPersistentSessionId()}),signal:currentAbortController.signal})
+          .then(r=>{if(!r.ok) throw new Error('HTTP '+r.status); return r.json();})
+          .then(d=>{showTyping(false); isSendingMsg=false; if(btn){btn.disabled=false; btn.style.opacity='1';} addMsg(d.reply||d.message||'क्षमा करें','bot',feature);})
+          .catch(e=>{showTyping(false); isSendingMsg=false; if(btn){btn.disabled=false; btn.style.opacity='1';} if(e.name==='AbortError') return; addMsg('सर्वर धीमा है, फिर से प्रयास करें 🙏','bot');});
         }
 
         function startSahcharVoice() {
