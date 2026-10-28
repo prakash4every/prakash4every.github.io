@@ -1714,30 +1714,13 @@
         async function loadVideos() {
             const videoGallery = document.querySelector('.video-gallery');
             if (!videoGallery) return;
-            let videoFiles = [];
-            try {
-                const apiUrl = 'https://api.github.com/repos/prakash4every/sahchar/contents/video';
-                const response = await fetch(apiUrl, { headers: { 'Accept': 'application/vnd.github.v3+json' } });
-                if (response.ok) {
-                    const files = await response.json();
-                    videoFiles = files.filter(file => file.name.toLowerCase().endsWith('.mp4')).map(f => ({
-                        name: f.name,
-                        download_url: f.download_url,
-                        quote: getRandomVideoMessage(),
-                        desc: f.name.replace('.mp4', '').replace(/[_-]/g, ' ')
-                    }));
-                }
-            } catch (e) {
-                console.warn("GitHub video fetch note:", e);
-            }
 
-            if (videoFiles.length === 0) {
-                videoFiles = [
-                    { name: "Ocean Meditation", download_url: "https://vjs.zencdn.net/v/oceans.mp4", quote: "शांति भीतर से आती है, बाहर मत खोजो।", desc: "ध्यान और शांति का अनुभव" },
-                    { name: "Nature Blooming", download_url: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4", quote: "जागरूकता ही मुक्ति का मार्ग है।", desc: "प्रकृति और जीवन की खिले हुए फूल जैसी सुंदरता" },
-                    { name: "Cinematic Journey", download_url: "https://media.w3.org/2010/05/sintel/trailer.mp4", quote: "जो सोचते हैं वही बनते हैं।", desc: "जीवन की रोमांचक और प्रेरणादायक यात्रा" }
-                ];
-            }
+            // 1. Render immediate fallback videos so gallery is NEVER blank
+            let videoFiles = [
+                { name: "Ocean Meditation", source: "https://vjs.zencdn.net/v/oceans.mp4", quote: "शांति भीतर से आती है, बाहर मत खोजो।", desc: "ध्यान और शांति का अनुभव" },
+                { name: "Nature Blooming", source: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4", quote: "जागरूकता ही मुक्ति का मार्ग है।", desc: "प्रकृति और जीवन की खिले हुए फूल जैसी सुंदरता" },
+                { name: "Cinematic Journey", source: "https://media.w3.org/2010/05/sintel/trailer.mp4", quote: "जो सोचते हैं वही बनते हैं।", desc: "जीवन की रोमांचक और प्रेरणादायक यात्रा" }
+            ];
 
             videoGallery.innerHTML = '';
             videoFiles.forEach(file => {
@@ -1745,7 +1728,7 @@
                 card.className = 'video-card';
                 card.innerHTML = `
                     <video controls preload="none" poster="">
-                        <source src="${file.download_url}" type="video/mp4">
+                        <source src="${file.source}" type="video/mp4">
                         ब्राउज़र वीडियो सपोर्ट नहीं करता।
                     </video>
                     <div class="video-info">
@@ -1757,6 +1740,50 @@
                 `;
                 videoGallery.appendChild(card);
             });
+
+            // 2. Fetch fresh Facebook Page videos in background
+            try {
+                const res = await fetch(`${API_URL}/videos`, {
+                    headers: { 'x-app-auth': 'sahchar-app-client-secure-2026' }
+                });
+                const data = await res.json();
+                if (data.success && data.videos && data.videos.length > 0) {
+                    videoGallery.innerHTML = '';
+                    data.videos.forEach(v => {
+                        const card = document.createElement('div');
+                        card.className = 'video-card';
+                        if (v.source && !v.source.includes('expire')) {
+                            card.innerHTML = `
+                                <video controls preload="none" poster="${v.picture}">
+                                    <source src="${v.source}" type="video/mp4">
+                                    ब्राउज़र वीडियो सपोर्ट नहीं करता।
+                                </video>
+                                <div class="video-info">
+                                    <h4>“${v.name}”</h4>
+                                    <div class="buddha-message">
+                                        <a href="${v.link}" target="_blank" style="color:var(--primary); font-weight:bold;">▶ Facebook पर देखें</a>
+                                    </div>
+                                </div>
+                            `;
+                        } else {
+                            card.innerHTML = `
+                                <div style="position:relative; padding-top:56.25%; background:#000;">
+                                    <img src="${v.picture}" alt="${v.name}" style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover;" onerror="this.src='https://images.unsplash.com/photo-1543807535-eceef0bc6599?auto=format&fit=crop&w=800&q=80'" />
+                                </div>
+                                <div class="video-info">
+                                    <h4>“${v.name}”</h4>
+                                    <div class="buddha-message">
+                                        <a href="${v.link}" target="_blank" style="color:var(--primary); font-weight:bold;">▶ Facebook Reel देखें</a>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                        videoGallery.appendChild(card);
+                    });
+                }
+            } catch (e) {
+                console.warn("Background video sync note:", e);
+            }
         }
 
         // ============================================================ //
