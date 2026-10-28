@@ -1348,10 +1348,10 @@
     <section id="gallery">
         <h2>हमारी गैलरी</h2>
         <div class="gallery" id="image-gallery">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Buddha_statue_Sarnath.jpg/800px-Buddha_statue_Sarnath.jpg" alt="Buddha Statue Sarnath" loading="lazy">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Buddha_statue_at_Kusinara.jpg/800px-Buddha_statue_at_Kusinara.jpg" alt="Buddha Statue Kusinara" loading="lazy">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Buddha_at_Kamakura.jpg/800px-Buddha_at_Kamakura.jpg" alt="Buddha Kamakura" loading="lazy">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Great_Buddha_at_Lingyin_Temple.jpg/800px-Great_Buddha_at_Lingyin_Temple.jpg" alt="Lingyin Temple Buddha" loading="lazy">
+            <img src="https://images.unsplash.com/photo-1543807535-eceef0bc6599?auto=format&fit=crop&w=800&q=80" alt="Buddha Meditation" loading="lazy">
+            <img src="https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?auto=format&fit=crop&w=800&q=80" alt="Zen Peace" loading="lazy">
+            <img src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=800&q=80" alt="Meditation Sunrise" loading="lazy">
+            <img src="https://images.unsplash.com/photo-1528715471579-d1bcf0ba1e83?auto=format&fit=crop&w=800&q=80" alt="Temple Nature" loading="lazy">
         </div>
     </section>
 
@@ -1766,12 +1766,12 @@
             const gallery = document.getElementById('image-gallery');
             if (!gallery) return;
 
-            // 1. Render immediate fallback Buddha images so gallery is NEVER blank
+            // 1. Render immediate fallback Unsplash images so gallery is NEVER blank (fixed for GitHub Pages)
             const imageFiles = [
-                { name: "Buddha Statue Sarnath", download_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Buddha_statue_Sarnath.jpg/800px-Buddha_statue_Sarnath.jpg" },
-                { name: "Buddha Statue Kusinara", download_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Buddha_statue_at_Kusinara.jpg/800px-Buddha_statue_at_Kusinara.jpg" },
-                { name: "Buddha Kamakura", download_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Buddha_at_Kamakura.jpg/800px-Buddha_at_Kamakura.jpg" },
-                { name: "Lingyin Temple Buddha", download_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Great_Buddha_at_Lingyin_Temple.jpg/800px-Great_Buddha_at_Lingyin_Temple.jpg" }
+                { name: "Buddha Meditation", download_url: "https://images.unsplash.com/photo-1543807535-eceef0bc6599?auto=format&fit=crop&w=800&q=80" },
+                { name: "Zen Peace", download_url: "https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?auto=format&fit=crop&w=800&q=80" },
+                { name: "Meditation Sunrise", download_url: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=800&q=80" },
+                { name: "Temple Nature", download_url: "https://images.unsplash.com/photo-1528715471579-d1bcf0ba1e83?auto=format&fit=crop&w=800&q=80" }
             ];
 
             gallery.innerHTML = '';
@@ -1780,10 +1780,11 @@
                 img.src = file.download_url;
                 img.alt = file.name;
                 img.loading = 'lazy';
+                img.style.cursor = 'pointer';
                 gallery.appendChild(img);
             });
 
-            // 2. Fetch fresh Facebook page gallery images in background
+            // 2. Fetch fresh Facebook page gallery images in background from Motivational Video Page (prakash4every31)
             try {
                 const res = await fetch(`${API_URL}/gallery`, {
                     headers: { 'x-app-auth': 'sahchar-app-client-secure-2026' }
@@ -1796,11 +1797,14 @@
                         img.src = file.download_url;
                         img.alt = file.name || "Sahchar Gallery";
                         img.loading = 'lazy';
+                        img.style.cursor = 'pointer';
+                        img.onclick = () => window.open(file.link || file.download_url, '_blank');
                         gallery.appendChild(img);
                     });
+                    console.log(`[Gallery Sync] ${data.images.length} images synced from FB Page`);
                 }
             } catch (e) {
-                console.warn("Background gallery sync note:", e);
+                console.warn("Background gallery sync note (using fallback):", e);
             }
         }
 
