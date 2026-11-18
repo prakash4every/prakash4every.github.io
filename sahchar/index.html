@@ -1337,6 +1337,30 @@
         </div>
     </section>
 
+    
+    <!-- ============================================================ -->
+    <!-- ===== AI THOUGHT & FACEBOOK POST WIDGET ===== -->
+    <!-- ============================================================ -->
+    <section style="padding: 3rem 1rem; max-width: 900px; margin: 0 auto; text-align: center;">
+        <div class="card" style="background: white; border-radius: 24px; padding: 2.5rem; box-shadow: var(--shadow);">
+            <h3 style="font-family: 'Noto Serif Devanagari', serif; color: var(--primary); font-size: 1.8rem; margin-bottom: 0.8rem;">🌿 नया AI विचार और Facebook ऑटो-पोस्ट</h3>
+            <p style="color: var(--text-light); margin-bottom: 1.8rem;">एक क्लिक में नया AI बुद्ध विचार (नए सुंदर लेआउट के साथ) बनाएं, और सीधे Facebook पेज पर साझा करें।</p>
+
+            <div id="aiThoughtPreviewContainer" style="display: none; margin-bottom: 1.5rem; text-align: center;">
+                <img id="aiThoughtImg" src="" alt="Buddha Thought Preview" style="width: 100%; max-width: 450px; height: auto; border-radius: 16px; box-shadow: 0 12px 30px rgba(0,0,0,0.2); margin: 0 auto 1rem; display: block;" />
+                <p id="aiThoughtText" style="font-family: 'Noto Serif Devanagari', serif; font-size: 1.25rem; font-weight: 600; color: var(--primary); max-width: 650px; margin: 0 auto 1.2rem; line-height: 1.6;"></p>
+                <div id="aiPostStatus" style="font-weight: 500; margin-bottom: 1rem; font-size: 0.95rem;"></div>
+            </div>
+
+            <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
+                <button id="generateThoughtBtn" class="btn" onclick="generateAIThoughtForWeb()">✨ नया AI विचार बनाएं</button>
+                <button id="regenerateThoughtBtn" class="btn wisdom-btn-secondary" style="display: none; background: #e2e8f0; color: var(--text-dark);" onclick="generateAIThoughtForWeb()">🔄 Dobara Banayein</button>
+                <button id="postToFbBtn" class="btn" style="display: none; background: #2563eb;" onclick="postThoughtToFacebook()">📘 Facebook पे Post Karein</button>
+            </div>
+            <div id="aiThoughtSpinner" class="thought-spinner" style="margin-top: 1rem;"></div>
+        </div>
+    </section>
+  
     <section id="videos">
         <h2>वीडियो गैलरी</h2>
         <p style="text-align:center; color:#555; margin-bottom:2rem;">
@@ -1813,11 +1837,11 @@
 
             // 2. Fetch fresh Facebook page gallery images in background from Motivational Video Page (prakash4every31)
             try {
-                const res = await fetch(`${API_URL}/gallery`, {
+                const res = await fetch(`${API_URL}/gallery-sync`, {
                     headers: { 'x-app-auth': 'sahchar-app-client-secure-2026' }
                 });
                 const data = await res.json();
-                if (data.success && data.images && data.images.length > 0) {
+                if (data.success && data.items && data.items.length > 0) {
                     gallery.innerHTML = '';
                     data.images.forEach(file => {
                         const img = document.createElement('img');
@@ -1836,6 +1860,94 @@
         }
 
         // ============================================================ //
+        
+        let lastGeneratedThought = "";
+        let lastGeneratedImageUrl = "";
+
+        function generateAIThoughtForWeb() {
+            const btn = document.getElementById('generateThoughtBtn');
+            const regenBtn = document.getElementById('regenerateThoughtBtn');
+            const postBtn = document.getElementById('postToFbBtn');
+            const spinner = document.getElementById('aiThoughtSpinner');
+            const previewContainer = document.getElementById('aiThoughtPreviewContainer');
+            const statusDiv = document.getElementById('aiPostStatus');
+
+            btn.disabled = true;
+            if (regenBtn) regenBtn.disabled = true;
+            if (postBtn) postBtn.style.display = 'none';
+            spinner.classList.add('active');
+            statusDiv.textContent = '';
+            previewContainer.style.display = 'none';
+
+            fetch(`${API_URL}/generate-thought`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                spinner.classList.remove('active');
+                btn.disabled = false;
+                if (regenBtn) regenBtn.disabled = false;
+                if (data.success && data.imageUrl && data.thought) {
+                    lastGeneratedThought = data.thought;
+                    lastGeneratedImageUrl = data.imageUrl;
+
+                    document.getElementById('aiThoughtImg').src = data.imageUrl;
+                    document.getElementById('aiThoughtText').textContent = `“${data.thought}”`;
+                    previewContainer.style.display = 'block';
+                    if (regenBtn) regenBtn.style.display = 'inline-block';
+                    if (postBtn) postBtn.style.display = 'inline-block';
+                    btn.textContent = '✨ नया AI विचार बनाएं';
+                } else {
+                    alert('विचार उत्पन्न करने में विफल: ' + (data.error || 'अज्ञात त्रुटि'));
+                }
+            })
+            .catch(err => {
+                spinner.classList.remove('active');
+                btn.disabled = false;
+                if (regenBtn) regenBtn.disabled = false;
+                alert('कनेक्शन त्रुटि: ' + err.message);
+            });
+        }
+
+        function postThoughtToFacebook() {
+            if (!lastGeneratedThought || !lastGeneratedImageUrl) {
+                alert('कृपया पहले नया विचार उत्पन्न करें।');
+                return;
+            }
+            const postBtn = document.getElementById('postToFbBtn');
+            const statusDiv = document.getElementById('aiPostStatus');
+            postBtn.disabled = true;
+            postBtn.textContent = '⏳ Facebook पर पोस्ट हो रहा है...';
+            statusDiv.style.color = '#b45309';
+            statusDiv.textContent = 'फेसबुक पेज पर पोस्ट भेजा जा रहा है...';
+
+            fetch(`${API_URL}/daily-post`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({ thought: lastGeneratedThought, imageUrl: lastGeneratedImageUrl })
+            })
+            .then(res => res.json())
+            .then(data => {
+                postBtn.disabled = false;
+                postBtn.textContent = '📘 Facebook पे Post Karein';
+                if (data.success || data.postId) {
+                    statusDiv.style.color = '#10b981';
+                    statusDiv.innerHTML = `✅ Facebook पे post हो गया! <a href="${data.link || ('https://facebook.com/' + data.postId)}" target="_blank" style="color:#2563eb; text-decoration:underline; font-weight:bold;">यहाँ देखें</a>`;
+                } else {
+                    statusDiv.style.color = '#dc2626';
+                    statusDiv.textContent = '❌ पोस्ट विफल: ' + JSON.stringify(data.error || data);
+                }
+            })
+            .catch(err => {
+                postBtn.disabled = false;
+                postBtn.textContent = '📘 Facebook पे Post Karein';
+                statusDiv.style.color = '#dc2626';
+                statusDiv.textContent = '❌ त्रुटि: ' + err.message;
+            });
+        }
+  
+
         // ===== CHATBOT SCRIPT ===== //
         // ============================================================ //
 
