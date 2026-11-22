@@ -1355,7 +1355,11 @@
             <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
                 <button id="generateThoughtBtn" class="btn" onclick="generateAIThoughtForWeb()">✨ नया AI विचार बनाएं</button>
                 <button id="regenerateThoughtBtn" class="btn wisdom-btn-secondary" style="display: none; background: #e2e8f0; color: var(--text-dark);" onclick="generateAIThoughtForWeb()">🔄 Dobara Banayein</button>
-                <button id="postToFbBtn" class="btn" style="display: none; background: #2563eb;" onclick="postThoughtToFacebook()">📘 Facebook पे Post Karein</button>
+                <button id="shareFbThoughtBtn" class="btn" style="display: none; background: #1877f2;" onclick="shareThoughtFacebook()">📘 Facebook पर शेयर करें</button>
+                <button id="shareTwitterThoughtBtn" class="btn" style="display: none; background: linear-gradient(135deg, #000000, #1f2937); color: #ffffff;" onclick="shareThoughtTwitter()">𝕏 Twitter (X) शेयर</button>
+                <button id="shareWhatsAppThoughtBtn" class="btn" style="display: none; background: #25D366; color: #ffffff;" onclick="shareThoughtWhatsApp()">💬 WhatsApp शेयर</button>
+                <button id="copyThoughtBtn" class="btn" style="display: none; background: #475569; color: #ffffff;" onclick="copyThoughtToClipboard()">📋 कॉपी करें</button>
+                <button id="postToFbBtn" class="btn" style="display: none; background: #2563eb;" onclick="postThoughtToFacebook()">🚀 पेज ऑटो-पोस्ट</button>
             </div>
             <div id="aiThoughtSpinner" class="thought-spinner" style="margin-top: 1rem;"></div>
         </div>
@@ -1872,10 +1876,48 @@
         let lastGeneratedThought = "";
         let lastGeneratedImageUrl = "";
 
+        function shareThoughtFacebook() {
+            const quote = lastGeneratedThought ? `${lastGeneratedThought} — भगवान बुद्ध (SahcharAI)` : "SahcharAI बुद्ध विचार";
+            const shareUrl = lastGeneratedImageUrl || window.location.href;
+            const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(quote)}`;
+            window.open(fbShareUrl, '_blank', 'width=620,height=520,scrollbars=yes,resizable=yes');
+        }
+
+        function shareThoughtTwitter() {
+            const tweetText = `${lastGeneratedThought || 'बुद्ध विचार'}\n\n— भगवान बुद्ध 🪷\nSahcharAI दैनिक विचार\n`;
+            const tweetUrl = lastGeneratedImageUrl || 'https://prakash4every.github.io/sahchar/';
+            const xShareUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(tweetUrl)}`;
+            window.open(xShareUrl, '_blank', 'width=600,height=480,scrollbars=yes,resizable=yes');
+        }
+
+        function shareThoughtWhatsApp() {
+            const msg = `🌅 *आज का बुद्ध विचार:*\n\n"${lastGeneratedThought}"\n\n— भगवान बुद्ध 🪷\n\nचित्र देखें: ${lastGeneratedImageUrl || ''}\n\n👉 अधिक प्रेरणादायक विचारों के लिए:\nhttps://prakash4every.github.io/sahchar/`;
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+
+        function copyThoughtToClipboard() {
+            if (!lastGeneratedThought) return;
+            const textToCopy = `“${lastGeneratedThought}” — भगवान बुद्ध (SahcharAI)\n${lastGeneratedImageUrl || 'https://prakash4every.github.io/sahchar/'}`;
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                const copyBtn = document.getElementById('copyThoughtBtn');
+                if (copyBtn) {
+                    const prevText = copyBtn.textContent;
+                    copyBtn.textContent = '✅ कॉपी हो गया!';
+                    setTimeout(() => { copyBtn.textContent = prevText; }, 2500);
+                }
+            }).catch(() => {
+                alert('विचार क्लिपबोर्ड पर कॉपी हो गया!');
+            });
+        }
+
         function generateAIThoughtForWeb() {
             const btn = document.getElementById('generateThoughtBtn');
             const regenBtn = document.getElementById('regenerateThoughtBtn');
             const postBtn = document.getElementById('postToFbBtn');
+            const shareFbBtn = document.getElementById('shareFbThoughtBtn');
+            const shareTwBtn = document.getElementById('shareTwitterThoughtBtn');
+            const shareWaBtn = document.getElementById('shareWhatsAppThoughtBtn');
+            const copyBtn = document.getElementById('copyThoughtBtn');
             const spinner = document.getElementById('aiThoughtSpinner');
             const previewContainer = document.getElementById('aiThoughtPreviewContainer');
             const statusDiv = document.getElementById('aiPostStatus');
@@ -1883,6 +1925,10 @@
             btn.disabled = true;
             if (regenBtn) regenBtn.disabled = true;
             if (postBtn) postBtn.style.display = 'none';
+            if (shareFbBtn) shareFbBtn.style.display = 'none';
+            if (shareTwBtn) shareTwBtn.style.display = 'none';
+            if (shareWaBtn) shareWaBtn.style.display = 'none';
+            if (copyBtn) copyBtn.style.display = 'none';
             spinner.classList.add('active');
             statusDiv.textContent = '';
             previewContainer.style.display = 'none';
@@ -1904,6 +1950,10 @@
                     document.getElementById('aiThoughtText').textContent = `“${data.thought}”`;
                     previewContainer.style.display = 'block';
                     if (regenBtn) regenBtn.style.display = 'inline-block';
+                    if (shareFbBtn) shareFbBtn.style.display = 'inline-block';
+                    if (shareTwBtn) shareTwBtn.style.display = 'inline-block';
+                    if (shareWaBtn) shareWaBtn.style.display = 'inline-block';
+                    if (copyBtn) copyBtn.style.display = 'inline-block';
                     if (postBtn) postBtn.style.display = 'inline-block';
                     btn.textContent = '✨ नया AI विचार बनाएं';
                 } else {
@@ -1926,7 +1976,7 @@
             const postBtn = document.getElementById('postToFbBtn');
             const statusDiv = document.getElementById('aiPostStatus');
             postBtn.disabled = true;
-            postBtn.textContent = '⏳ Facebook पर पोस्ट हो रहा है...';
+            postBtn.textContent = '⏳ पेज पर पोस्ट हो रहा है...';
             statusDiv.style.color = '#b45309';
             statusDiv.textContent = 'फेसबुक पेज पर पोस्ट भेजा जा रहा है...';
 
@@ -1938,20 +1988,28 @@
             .then(res => res.json())
             .then(data => {
                 postBtn.disabled = false;
-                postBtn.textContent = '📘 Facebook पे Post Karein';
+                postBtn.textContent = '🚀 पेज ऑटो-पोस्ट';
                 if (data.success || data.postId) {
                     statusDiv.style.color = '#10b981';
-                    statusDiv.innerHTML = `✅ Facebook पे post हो गया! <a href="${data.link || ('https://facebook.com/' + data.postId)}" target="_blank" style="color:#2563eb; text-decoration:underline; font-weight:bold;">यहाँ देखें</a>`;
+                    statusDiv.innerHTML = `✅ Facebook पेज पर पोस्ट हो गया! <a href="${data.link || ('https://facebook.com/' + data.postId)}" target="_blank" style="color:#2563eb; text-decoration:underline; font-weight:bold;">यहाँ देखें</a>`;
                 } else {
-                    statusDiv.style.color = '#dc2626';
-                    statusDiv.textContent = '❌ पोस्ट विफल: ' + JSON.stringify(data.error || data);
+                    const errStr = JSON.stringify(data.error || data);
+                    if (errStr.includes('publish_actions') || errStr.includes('permission') || errStr.includes('200')) {
+                        statusDiv.style.color = '#1d4ed8';
+                        statusDiv.innerHTML = `💡 <b>Facebook Share Dialog:</b> Meta सुरक्षा नीति के तहत सीधे Facebook पर शेयर करें:<br><button onclick="shareThoughtFacebook()" class="btn" style="background:#1877f2; margin-top:8px; display:inline-block;">📘 Facebook पर तुरंत शेयर करें</button>`;
+                        shareThoughtFacebook();
+                    } else {
+                        statusDiv.style.color = '#dc2626';
+                        statusDiv.textContent = '❌ पोस्ट विफल: ' + (data.error?.message || errStr);
+                    }
                 }
             })
             .catch(err => {
                 postBtn.disabled = false;
-                postBtn.textContent = '📘 Facebook पे Post Karein';
-                statusDiv.style.color = '#dc2626';
-                statusDiv.textContent = '❌ त्रुटि: ' + err.message;
+                postBtn.textContent = '🚀 पेज ऑटो-पोस्ट';
+                statusDiv.style.color = '#1d4ed8';
+                statusDiv.innerHTML = `💡 <b>Facebook Share Dialog:</b> <button onclick="shareThoughtFacebook()" class="btn" style="background:#1877f2; margin-top:6px;">📘 Facebook पर शेयर करें</button>`;
+                shareThoughtFacebook();
             });
         }
   
