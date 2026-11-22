@@ -1358,7 +1358,7 @@
                 <button id="shareFbThoughtBtn" class="btn" style="display: none; background: #1877f2;" onclick="shareThoughtFacebook()">📘 Facebook पर शेयर करें</button>
                 <button id="shareTwitterThoughtBtn" class="btn" style="display: none; background: linear-gradient(135deg, #000000, #1f2937); color: #ffffff;" onclick="shareThoughtTwitter()">𝕏 Twitter (X) शेयर</button>
                 <button id="shareWhatsAppThoughtBtn" class="btn" style="display: none; background: #25D366; color: #ffffff;" onclick="shareThoughtWhatsApp()">💬 WhatsApp शेयर</button>
-                <button id="copyThoughtBtn" class="btn" style="display: none; background: #475569; color: #ffffff;" onclick="copyThoughtToClipboard()">📋 कॉपी करें</button>
+                <button id="copyThoughtBtn" class="btn" style="display: none; background: #475569; color: #ffffff;" onclick="copyThoughtToClipboard()">📋 विचार व #हैशटैग कॉपी</button>
                 <button id="postToFbBtn" class="btn" style="display: none; background: #2563eb;" onclick="postThoughtToFacebook()">🚀 पेज ऑटो-पोस्ट</button>
             </div>
             <div id="aiThoughtSpinner" class="thought-spinner" style="margin-top: 1rem;"></div>
@@ -1877,33 +1877,66 @@
         let lastGeneratedImageUrl = "";
 
         function shareThoughtFacebook() {
-            const quote = lastGeneratedThought ? `${lastGeneratedThought} — भगवान बुद्ध (SahcharAI)` : "SahcharAI बुद्ध विचार";
+            if (!lastGeneratedThought && !lastGeneratedImageUrl) {
+                alert('कृपया पहले नया विचार उत्पन्न करें।');
+                return;
+            }
+            const hashtags = "#BuddhaQuotes #MotivationalThoughts #Buddha #SahcharAI #Peace";
+            const fullCaption = `“${lastGeneratedThought}”\n\n— भगवान बुद्ध 🪷\n\n${hashtags}\n\n👉 https://prakash4every.github.io/sahchar/`;
+
+            // Auto copy text and hashtags to user's clipboard
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(fullCaption).catch(e => console.warn(e));
+            }
+
+            const statusDiv = document.getElementById('aiPostStatus');
+            if (statusDiv) {
+                statusDiv.innerHTML = `
+                    <div style="background: #eff6ff; border: 2px solid #3b82f6; border-radius: 12px; padding: 14px; margin-top: 12px; color: #1e40af; font-size: 0.95rem; text-align: left; line-height: 1.5; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);">
+                        <div style="font-weight: 700; font-size: 1rem; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                            <span>📋</span> <span>विचार और #हैशटैग स्वतः कॉपी हो गए हैं!</span>
+                        </div>
+                        Facebook विंडो में <b>"What's on your mind"</b> बॉक्स पर क्लिक करके <b>Paste (Ctrl + V)</b> करें।<br>
+                        <div style="margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                            <button onclick="copyThoughtToClipboard()" class="btn" style="padding: 5px 12px; font-size: 0.85rem; background: #2563eb; color: #ffffff;">📋 दोबारा कॉपी करें</button>
+                            <span style="font-size: 0.85rem; color: #475569;">हैशटैग और बुद्ध विचार दोनों आ जाएँगे!</span>
+                        </div>
+                    </div>
+                `;
+            }
+
             const shareUrl = lastGeneratedImageUrl || window.location.href;
-            const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(quote)}`;
-            window.open(fbShareUrl, '_blank', 'width=620,height=520,scrollbars=yes,resizable=yes');
+            const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(fullCaption)}&hashtag=${encodeURIComponent('#BuddhaQuotes')}`;
+            window.open(fbShareUrl, '_blank', 'width=620,height=580,scrollbars=yes,resizable=yes');
         }
 
         function shareThoughtTwitter() {
-            const tweetText = `${lastGeneratedThought || 'बुद्ध विचार'}\n\n— भगवान बुद्ध 🪷\nSahcharAI दैनिक विचार\n`;
+            const tweetText = `“${lastGeneratedThought || 'बुद्ध विचार'}”\n\n— भगवान बुद्ध 🪷\n`;
             const tweetUrl = lastGeneratedImageUrl || 'https://prakash4every.github.io/sahchar/';
-            const xShareUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(tweetUrl)}`;
-            window.open(xShareUrl, '_blank', 'width=600,height=480,scrollbars=yes,resizable=yes');
+            const xShareUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(tweetUrl)}&hashtags=BuddhaQuotes,SahcharAI,Motivation,Peace`;
+            window.open(xShareUrl, '_blank', 'width=600,height=500,scrollbars=yes,resizable=yes');
         }
 
         function shareThoughtWhatsApp() {
-            const msg = `🌅 *आज का बुद्ध विचार:*\n\n"${lastGeneratedThought}"\n\n— भगवान बुद्ध 🪷\n\nचित्र देखें: ${lastGeneratedImageUrl || ''}\n\n👉 अधिक प्रेरणादायक विचारों के लिए:\nhttps://prakash4every.github.io/sahchar/`;
+            const hashtags = "#BuddhaQuotes #MotivationalThoughts #Buddha #SahcharAI";
+            const msg = `🌅 *आज का बुद्ध विचार:*\n\n"${lastGeneratedThought}"\n\n— भगवान बुद्ध 🪷\n\n${hashtags}\n\nचित्र देखें: ${lastGeneratedImageUrl || ''}\n\n👉 अधिक प्रेरणादायक विचारों के लिए:\nhttps://prakash4every.github.io/sahchar/`;
             window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
         }
 
         function copyThoughtToClipboard() {
             if (!lastGeneratedThought) return;
-            const textToCopy = `“${lastGeneratedThought}” — भगवान बुद्ध (SahcharAI)\n${lastGeneratedImageUrl || 'https://prakash4every.github.io/sahchar/'}`;
+            const hashtags = "#BuddhaQuotes #MotivationalThoughts #Buddha #SahcharAI #Peace";
+            const textToCopy = `“${lastGeneratedThought}”\n\n— भगवान बुद्ध 🪷\n\n${hashtags}\n\n👉 ${lastGeneratedImageUrl || 'https://prakash4every.github.io/sahchar/'}`;
             navigator.clipboard.writeText(textToCopy).then(() => {
                 const copyBtn = document.getElementById('copyThoughtBtn');
                 if (copyBtn) {
                     const prevText = copyBtn.textContent;
-                    copyBtn.textContent = '✅ कॉपी हो गया!';
+                    copyBtn.textContent = '✅ विचार व #हैशटैग कॉपी!';
                     setTimeout(() => { copyBtn.textContent = prevText; }, 2500);
+                }
+                const statusDiv = document.getElementById('aiPostStatus');
+                if (statusDiv) {
+                    statusDiv.innerHTML = '<div style="background: #ecfdf5; border: 1px solid #10b981; border-radius: 8px; padding: 8px 12px; margin-top: 8px; color: #065f46; font-weight: 600; font-size: 0.9rem;">✅ विचार और #हैशटैग कॉपी हो गए हैं! Facebook में "What\'s on your mind" पर Paste (Ctrl+V) करें।</div>';
                 }
             }).catch(() => {
                 alert('विचार क्लिपबोर्ड पर कॉपी हो गया!');
