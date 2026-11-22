@@ -1847,24 +1847,35 @@
                 gallery.appendChild(img);
             });
 
-            // 2. Fetch fresh Facebook page gallery images in background from Motivational Video Page (prakash4every31)
+            // 2. Fetch fresh Facebook page gallery images in background from Motivational Video Page
             try {
                 const res = await fetch(`${API_URL}/gallery-sync`, {
                     headers: { 'x-app-auth': 'sahchar-app-client-secure-2026' }
                 });
                 const data = await res.json();
-                if (data.success && data.items && data.items.length > 0) {
+                const imageList = (data.images && data.images.length > 0)
+                    ? data.images
+                    : (data.items && data.items.length > 0)
+                        ? data.items.filter(it => it.type === 'photo').map(it => ({
+                            name: it.title,
+                            download_url: it.url,
+                            url: it.url,
+                            link: it.id ? `https://facebook.com/${it.id}` : (it.url || '#')
+                        }))
+                        : [];
+
+                if (imageList.length > 0) {
                     gallery.innerHTML = '';
-                    data.images.forEach(file => {
+                    imageList.forEach(file => {
                         const img = document.createElement('img');
-                        img.src = file.download_url;
+                        img.src = file.download_url || file.url;
                         img.alt = file.name || "Sahchar Gallery";
                         img.loading = 'lazy';
                         img.style.cursor = 'pointer';
-                        img.onclick = () => window.open(file.link || file.download_url, '_blank');
+                        img.onclick = () => window.open(file.link || file.download_url || file.url, '_blank');
                         gallery.appendChild(img);
                     });
-                    console.log(`[Gallery Sync] ${data.images.length} images synced from FB Page`);
+                    console.log(`[Gallery Sync] ${imageList.length} images synced from FB Page`);
                 }
             } catch (e) {
                 console.warn("Background gallery sync note (using fallback):", e);
